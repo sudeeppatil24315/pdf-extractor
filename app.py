@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
 """
-Simple Flask web application for PDF to Excel conversion
+Flask web application for PDF to Excel conversion
 """
 
 from flask import Flask, render_template, request, send_file, flash, redirect, url_for

@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
 """
-AI-Powered Document Structuring & Data Extraction
-Extracts structured data from unstructured PDF and converts to Excel format
+PDF to Excel Data Extractor
+Extracts structured data from PDF documents and converts to Excel format
 """
 
 import PyPDF2
@@ -19,18 +18,15 @@ class PDFDataExtractor:
         self.data_rows = []
         
     def _extract_text(self) -> str:
-        """Extract text from PDF file"""
         with open(self.pdf_path, 'rb') as file:
             pdf_reader = PyPDF2.PdfReader(file)
             text = ""
             for page in pdf_reader.pages:
                 text += page.extract_text() + "\n"
-        # Normalize whitespace - replace multiple spaces/newlines with single space
         text = re.sub(r'\s+', ' ', text)
         return text
     
     def _add_row(self, key: str, value: any, comment: Optional[str] = None):
-        """Add a data row to the extraction"""
         self.data_rows.append({
             '#': len(self.data_rows) + 1,
             'Key': key,
@@ -39,7 +35,6 @@ class PDFDataExtractor:
         })
     
     def extract_personal_info(self):
-        """Extract personal information"""
         # Name extraction
         name_match = re.search(r'(\w+)\s+(\w+)\s+was born', self.text)
         if name_match:
@@ -81,7 +76,6 @@ class PDFDataExtractor:
             self._add_row('Nationality', nationality_match.group(1), comment)
     
     def extract_professional_info(self):
-        """Extract professional/career information"""
         # First job
         first_job_match = re.search(
             r'professional journey began on (\w+ \d+, \d{4}).*?as a ([\w\s]+) with an annual salary of ([\d,]+) (\w+)',
@@ -142,7 +136,6 @@ class PDFDataExtractor:
             self._add_row('Previous Starting Designation', designation + ' ', f'Promoted in {promo_year}')
     
     def extract_education_info(self):
-        """Extract education information"""
         # High school
         hs_match = re.search(r"high school education at ([^,]+, [^,]+),", self.text)
         if hs_match:
@@ -198,7 +191,6 @@ class PDFDataExtractor:
             self._add_row('Graduation CGPA', cgpa, f'Considered exceptional and scoring {thesis_score} out of 100 for his final year thesis project. ')
     
     def extract_certifications(self):
-        """Extract certification information"""
         # AWS
         aws_match = re.search(r'AWS Solutions Architect exam in (\d{4}) with a score of (\d+) out of (\d+)', self.text)
         if aws_match:
@@ -230,7 +222,6 @@ class PDFDataExtractor:
             self._add_row('Certifications 4', 'SAFe Agilist certification', comment)
     
     def extract_technical_skills(self):
-        """Extract technical proficiency information"""
         # Find the technical proficiency paragraph
         tech_match = re.search(
             r'In terms of technical proficiency,.*?establishing him as an expert in the field\.',
@@ -241,7 +232,6 @@ class PDFDataExtractor:
             self._add_row('Technical Proficiency', None, comment)
     
     def extract_all(self) -> pd.DataFrame:
-        """Extract all information and return as DataFrame"""
         self.extract_personal_info()
         self.extract_professional_info()
         self.extract_education_info()
@@ -252,27 +242,21 @@ class PDFDataExtractor:
         return df
     
     def save_to_excel(self, output_path: str = 'Output.xlsx'):
-        """Save extracted data to Excel file"""
         df = self.extract_all()
-        
-        # Create Excel writer
         with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
             df.to_excel(writer, sheet_name='Output', index=False)
-        
-        print(f"✓ Data extracted successfully!")
-        print(f"✓ Output saved to: {output_path}")
-        print(f"✓ Total rows extracted: {len(df)}")
+        print(f"Data extracted successfully!")
+        print(f"Output saved to: {output_path}")
+        print(f"Total rows extracted: {len(df)}")
         return output_path
 
 
 def main():
-    """Main execution function"""
     print("=" * 80)
-    print("AI-Powered Document Structuring & Data Extraction")
+    print("PDF to Excel Data Extractor")
     print("=" * 80)
     print()
     
-    # Extract data
     extractor = PDFDataExtractor('Data Input.pdf')
     output_file = extractor.save_to_excel()
     
