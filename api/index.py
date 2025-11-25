@@ -1,22 +1,28 @@
-#!/usr/bin/env python3
-"""
-Vercel serverless function for PDF to Excel conversion
-"""
-
-from flask import Flask, render_template, request, send_file, flash, redirect, url_for, jsonify
+from flask import Flask, render_template, request, send_file, jsonify
 import os
 import sys
-from werkzeug.utils import secure_filename
 import tempfile
 import io
 
-# Add parent directory to path to import our extractor
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from pdf_to_excel_extractor import PDFDataExtractor
+# Add parent directory to path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
 
-app = Flask(__name__, template_folder='../templates')
-app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+try:
+    from pdf_to_excel_extractor import PDFDataExtractor
+except ImportError:
+    # Fallback for local imports
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("pdf_to_excel_extractor", 
+                                                   os.path.join(parent_dir, "pdf_to_excel_extractor.py"))
+    pdf_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(pdf_module)
+    PDFDataExtractor = pdf_module.PDFDataExtractor
+
+app = Flask(__name__, template_folder=os.path.join(parent_dir, 'templates'))
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 ALLOWED_EXTENSIONS = {'pdf'}
 
@@ -108,7 +114,5 @@ def demo():
     except Exception as e:
         return jsonify({'error': f'Error in demo: {str(e)}'}), 500
 
-# Vercel serverless function handler
-def handler(request):
-    with app.request_context(request.environ):
-        return app.full_dispatch_request()
+# Export app for Vercel
+# Vercel will use this as the WSGI application
